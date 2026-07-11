@@ -35,8 +35,8 @@ const options = {
       },
     ],
   },
-  // Ensure that routing annotations are relative to file location for serverless bundlers
-  apis: [path.join(__dirname, '../routes/*.js')],
+  // Ensure that routing annotations are relative to file location for serverless bundlers (normalized for Windows compatibility)
+  apis: [path.join(__dirname, '../routes/*.js').replace(/\\/g, '/')],
 };
 
 const swaggerSpec = swaggerJSDoc(options);
