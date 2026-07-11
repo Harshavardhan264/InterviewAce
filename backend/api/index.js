@@ -1,48 +1,16 @@
-const express = require('express');
-const cors = require('cors');
-const dotenv = require('dotenv');
-const connectDB = require('./config/db');
-const apiRoutes = require('./routes/api');
+const app = require('../app');
+const connectDB = require('../config/db');
 
-const swaggerUi = require('swagger-ui-express');
-const swaggerSpec = require('./config/swagger');
-
-// Load environment variables
-dotenv.config();
-
-const app = express();
-
-// Middlewares
-app.use(cors());
-app.use(express.json());
-
-// Swagger Route
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-
-// Routes
-app.use('/api', apiRoutes);
-
-// Root Endpoint
-app.get('/', (req, res) => {
-  res.send('InterviewAce API is running. Check documentation at <a href="/api-docs">/api-docs</a>');
-});
-
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ message: 'Internal Server Error', error: err.message });
-});
-
-const startServer = async () => {
+module.exports = async (req, res) => {
   try {
+    // 1. Establish/reuse cached MongoDB connection
     await connectDB();
 
-    // Auto-seed verification check
-    const QuestionBank = require('./models/QuestionBank');
+    // 2. Run auto-seed check if collections are empty (on cold starts)
+    const QuestionBank = require('../models/QuestionBank');
     const count = await QuestionBank.countDocuments({});
     if (count === 0) {
-      console.log('⚠️ Database empty. Initializing automatic questions seed...');
-      const Company = require('./models/Company');
+      console.log('⚠️ Database empty. Initializing automatic questions seed inside serverless function...');
       
       const seedQuestions = [
         { title: 'Work and Time Speed', description: 'A train running at the speed of 60 km/hr crosses a pole in 9 seconds. What is the length of the train?', options: ['120 metres', '150 metres', '324 metres', '180 metres'], correctAnswer: '150 metres', category: 'Aptitude' },
@@ -62,15 +30,13 @@ const startServer = async () => {
       console.log('✅ Auto-seed completed successfully!');
     }
 
-    const PORT = process.env.PORT || 5000;
-    app.listen(PORT, () => {
-      console.log(`Server is running on port ${PORT}`);
-      console.log(`Swagger documentation available at http://localhost:${PORT}/api-docs`);
-    });
+    // 3. Delegate request resolution to Express routing app
+    return app(req, res);
   } catch (error) {
-    console.error('Server startup failed:', error);
-    process.exit(1);
+    console.error('Serverless function failed to process request:', error);
+    res.status(500).json({ 
+      message: 'Failed to process serverless function request', 
+      error: error.message 
+    });
   }
 };
-
-startServer();

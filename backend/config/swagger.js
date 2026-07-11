@@ -1,4 +1,5 @@
 const swaggerJSDoc = require('swagger-jsdoc');
+const path = require('path');
 
 const options = {
   definition: {
@@ -10,8 +11,12 @@ const options = {
     },
     servers: [
       {
+        url: '/api',
+        description: 'Relative API Base (Auto-resolves on Vercel & localhost)',
+      },
+      {
         url: 'http://localhost:5000/api',
-        description: 'Local Development Server',
+        description: 'Local Standalone Backend Server',
       },
     ],
     components: {
@@ -30,7 +35,8 @@ const options = {
       },
     ],
   },
-  apis: ['./routes/*.js'], // Load JSDoc comments from routes
+  // Ensure that routing annotations are relative to file location for serverless bundlers
+  apis: [path.join(__dirname, '../routes/*.js')],
 };
 
 const swaggerSpec = swaggerJSDoc(options);
