@@ -1,0 +1,1 @@
+console.log('Legacy JSON migration has been removed. MongoDB is now the only supported data store.');

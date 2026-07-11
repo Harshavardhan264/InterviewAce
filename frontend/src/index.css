@@ -1,0 +1,58 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-dark-950 text-dark-50 min-h-screen overflow-x-hidden;
+  }
+}
+
+/* Custom Sleek Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #090d16;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-dark-700 rounded-full hover:bg-brand-500 transition-colors;
+}
+
+/* Glassmorphism Panel styles */
+.glass-panel {
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.glass-panel-light {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.glass-panel-hover {
+  @apply transition-all duration-300 hover:shadow-xl hover:shadow-brand-500/5 hover:-translate-y-0.5 hover:border-brand-500/25;
+}
+
+/* Accent Glows */
+.glow-accent {
+  background: radial-gradient(circle at center, rgba(139, 92, 246, 0.08) 0%, rgba(0, 0, 0, 0) 70%);
+}
+
+.glow-accent-green {
+  background: radial-gradient(circle at center, rgba(34, 197, 94, 0.08) 0%, rgba(0, 0, 0, 0) 70%);
+}
+
+.glow-accent-cyan {
+  background: radial-gradient(circle at center, rgba(6, 182, 212, 0.08) 0%, rgba(0, 0, 0, 0) 70%);
+}
+
+/* Code Snippet Styles */
+pre, code {
+  font-family: 'Fira Code', 'Courier New', Courier, monospace;
+}
