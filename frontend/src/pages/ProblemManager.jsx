@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import { API_URL } from '../context/AuthContext';
+import apiClient from '../utils/apiClient';
 import { 
   Search, 
   Plus, 
@@ -17,6 +16,7 @@ const ProblemManager = () => {
   const [problems, setProblems] = useState([]);
   const [topics, setTopics] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Filter states
   const [search, setSearch] = useState('');
@@ -38,7 +38,7 @@ const ProblemManager = () => {
 
   const fetchProblems = async () => {
     try {
-      const res = await axios.get(`${API_URL}/problems`, {
+      const res = await apiClient.get('/problems', {
         params: {
           topic: selectedTopic,
           difficulty: selectedDifficulty,
@@ -54,7 +54,7 @@ const ProblemManager = () => {
 
   const fetchTopics = async () => {
     try {
-      const res = await axios.get(`${API_URL}/topics`);
+      const res = await apiClient.get('/topics');
       setTopics(res.data);
     } catch (err) {
       console.error('Error fetching topics list:', err);
@@ -76,8 +76,9 @@ const ProblemManager = () => {
   const handleCreateProblem = async (e) => {
     e.preventDefault();
     const tagsArray = tagsInput.split(',').map(t => t.trim()).filter(t => t !== '');
+    setIsSubmitting(true);
     try {
-      await axios.post(`${API_URL}/problems`, {
+      await apiClient.post('/problems', {
         title,
         difficulty,
         topic,
@@ -102,12 +103,14 @@ const ProblemManager = () => {
       fetchProblems();
     } catch (err) {
       console.error('Error creating coding problem:', err);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleStatusUpdate = async (probId, newStatus) => {
     try {
-      await axios.put(`${API_URL}/problems/${probId}`, { status: newStatus });
+      await apiClient.put(`/problems/${probId}`, { status: newStatus });
       fetchProblems();
     } catch (err) {
       console.error('Error updating problem status:', err);
@@ -117,7 +120,7 @@ const ProblemManager = () => {
   const handleDeleteProblem = async (probId) => {
     if (window.confirm('Delete this coding problem?')) {
       try {
-        await axios.delete(`${API_URL}/problems/${probId}`);
+        await apiClient.delete(`/problems/${probId}`);
         setProblems(problems.filter(p => p._id !== probId));
       } catch (err) {
         console.error('Error deleting coding problem:', err);
@@ -397,9 +400,10 @@ const ProblemManager = () => {
 
               <button 
                 type="submit"
-                className="w-full rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold py-3 border border-brand-500/20 shadow-md transition-colors"
+                disabled={isSubmitting}
+                className="w-full rounded-xl bg-brand-600 hover:bg-brand-500 text-white font-semibold py-3 border border-brand-500/20 shadow-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Log Problem
+                {isSubmitting ? 'Logging Problem...' : 'Log Problem'}
               </button>
             </form>
           </div>

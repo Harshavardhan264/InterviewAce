@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import { API_URL } from '../context/AuthContext';
+import apiClient from '../utils/apiClient';
 import { 
   Building2, 
   ChevronRight, 
@@ -20,7 +19,7 @@ const CompanyPrep = () => {
   useEffect(() => {
     const fetchCompanies = async () => {
       try {
-        const res = await axios.get(`${API_URL}/companies`);
+        const res = await apiClient.get('/companies');
         setCompanies(res.data);
         if (res.data.length > 0) {
           setSelectedComp(res.data[0]); // Default to first company

@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import { API_URL } from '../context/AuthContext';
+import apiClient from '../utils/apiClient';
 import { 
   FileText, 
   Search, 
@@ -17,6 +16,7 @@ const Notes = () => {
   const [notes, setNotes] = useState([]);
   const [selectedNote, setSelectedNote] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Filter & Search states
   const [search, setSearch] = useState('');
@@ -32,7 +32,7 @@ const Notes = () => {
 
   const fetchNotes = async () => {
     try {
-      const res = await axios.get(`${API_URL}/notes`, {
+      const res = await apiClient.get('/notes', {
         params: {
           category: activeCategory,
           search
@@ -64,7 +64,7 @@ const Notes = () => {
 
   const handleCreateNote = async () => {
     try {
-      const res = await axios.post(`${API_URL}/notes`, {
+      const res = await apiClient.post('/notes', {
         title: 'Untitled Note',
         category: activeCategory,
         content: 'Write details here...'
@@ -80,8 +80,9 @@ const Notes = () => {
   };
 
   const handleSaveNote = async () => {
+    setIsSaving(true);
     try {
-      const res = await axios.put(`${API_URL}/notes/${selectedNote._id}`, {
+      const res = await apiClient.put(`/notes/${selectedNote._id}`, {
         title: editTitle,
         category: editCategory,
         content: editContent
@@ -96,13 +97,15 @@ const Notes = () => {
       setIsEditing(false);
     } catch (err) {
       console.error('Error saving note:', err);
+    } finally {
+      setIsSaving(false);
     }
   };
 
   const handleDeleteNote = async () => {
     if (window.confirm('Are you sure you want to delete this note?')) {
       try {
-        await axios.delete(`${API_URL}/notes/${selectedNote._id}`);
+        await apiClient.delete(`/notes/${selectedNote._id}`);
         const remainingNotes = notes.filter(n => n._id !== selectedNote._id);
         setNotes(remainingNotes);
         setSelectedNote(remainingNotes[0] || null);
@@ -227,9 +230,10 @@ const Notes = () => {
                     <>
                       <button 
                         onClick={handleSaveNote}
-                        className="flex items-center gap-1 text-xs bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-3 py-1.5 rounded-xl border border-emerald-500/20 shadow-md transition-colors"
+                        disabled={isSaving}
+                        className="flex items-center gap-1 text-xs bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-3 py-1.5 rounded-xl border border-emerald-500/20 shadow-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        <Save size={14} /> Save Note
+                        <Save size={14} /> {isSaving ? 'Saving...' : 'Save Note'}
                       </button>
                       <button 
                         onClick={() => setIsEditing(false)}

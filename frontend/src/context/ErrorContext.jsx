@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect } from 'react';
-import axios from 'axios';
+import apiClient from '../utils/apiClient';
 
 export const ErrorContext = createContext();
 
@@ -7,8 +7,8 @@ export const ErrorProvider = ({ children }) => {
   const [apiError, setApiError] = useState(null);
 
   useEffect(() => {
-    // Intercept response errors globally
-    const interceptorId = axios.interceptors.response.use(
+    // Intercept response errors globally on the centralized apiClient
+    const interceptorId = apiClient.interceptors.response.use(
       (response) => response,
       (error) => {
         // If it's a network error (server is offline or CORS issue)
@@ -43,7 +43,7 @@ export const ErrorProvider = ({ children }) => {
     );
 
     return () => {
-      axios.interceptors.response.eject(interceptorId);
+      apiClient.interceptors.response.eject(interceptorId);
     };
   }, []);
 

@@ -1,24 +1,19 @@
 import React, { createContext, useState, useEffect } from 'react';
-import axios from 'axios';
+import apiClient, { API_URL } from '../utils/apiClient';
 
 export const AuthContext = createContext();
-
-// Connect backend API base URL
-export const API_URL = 'http://localhost:5000/api';
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('token') || '');
   const [loading, setLoading] = useState(true);
 
-  // Sync token changes to axios authorization header
+  // Sync token changes to localStorage
   useEffect(() => {
     if (token) {
       localStorage.setItem('token', token);
-      axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     } else {
       localStorage.removeItem('token');
-      delete axios.defaults.headers.common['Authorization'];
     }
   }, [token]);
 
@@ -27,7 +22,7 @@ export const AuthProvider = ({ children }) => {
     const loadUser = async () => {
       if (token) {
         try {
-          const res = await axios.get(`${API_URL}/users/profile`);
+          const res = await apiClient.get('/users/profile');
           setUser(res.data);
         } catch (err) {
           console.error('Error fetching user profile:', err);
@@ -43,7 +38,7 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (email, password) => {
     try {
-      const res = await axios.post(`${API_URL}/auth/login`, { email, password });
+      const res = await apiClient.post('/auth/login', { email, password });
       setToken(res.data.token);
       setUser(res.data.user);
       return { success: true };
@@ -57,7 +52,7 @@ export const AuthProvider = ({ children }) => {
 
   const register = async (name, email, password, role) => {
     try {
-      const res = await axios.post(`${API_URL}/auth/register`, { name, email, password, role });
+      const res = await apiClient.post('/auth/register', { name, email, password, role });
       setToken(res.data.token);
       setUser(res.data.user);
       return { success: true };
@@ -71,7 +66,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
-      await axios.post(`${API_URL}/auth/logout`);
+      await apiClient.post('/auth/logout');
     } catch (err) {
       console.error('Logout error on backend:', err);
     }

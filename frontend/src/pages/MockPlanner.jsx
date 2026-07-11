@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import { API_URL } from '../context/AuthContext';
+import apiClient from '../utils/apiClient';
 import { 
   ClipboardList, 
   Clock, 
@@ -32,7 +31,7 @@ const MockPlanner = () => {
 
   const fetchHistory = async () => {
     try {
-      const res = await axios.get(`${API_URL}/mock-tests`);
+      const res = await apiClient.get('/mock-tests');
       setHistory(res.data);
     } catch (err) {
       console.error('Error fetching mock history:', err);
@@ -60,7 +59,7 @@ const MockPlanner = () => {
   const handleStartTest = async () => {
     setLoading(true);
     try {
-      const res = await axios.post(`${API_URL}/mock-tests`, {
+      const res = await apiClient.post('/mock-tests', {
         company,
         difficulty,
         duration: Number(duration)
@@ -86,7 +85,7 @@ const MockPlanner = () => {
   const handleSubmitTest = async () => {
     setSubmitting(true);
     try {
-      const res = await axios.post(`${API_URL}/mock-tests/submit`, {
+      const res = await apiClient.post('/mock-tests/submit', {
         testId: activeTest._id,
         answers
       });

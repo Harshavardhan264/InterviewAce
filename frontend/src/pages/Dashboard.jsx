@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react';
-import axios from 'axios';
-import { AuthContext, API_URL } from '../context/AuthContext';
+import apiClient from '../utils/apiClient';
+import { AuthContext } from '../context/AuthContext';
 import { 
   Flame, 
   Clock, 
@@ -34,8 +34,8 @@ const Dashboard = () => {
     const fetchData = async () => {
       try {
         const [statsRes, recsRes] = await Promise.all([
-          axios.get(`${API_URL}/dashboard`),
-          axios.get(`${API_URL}/recommendations`)
+          apiClient.get('/dashboard'),
+          apiClient.get('/recommendations')
         ]);
         setStats(statsRes.data);
         setRecs(recsRes.data);

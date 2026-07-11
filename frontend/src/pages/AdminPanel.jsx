@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import { API_URL } from '../context/AuthContext';
+import apiClient from '../utils/apiClient';
 import { 
   ShieldAlert, 
   Users, 
@@ -18,6 +17,7 @@ const AdminPanel = () => {
   const [users, setUsers] = useState([]);
   const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Edit / Creation modes
   const [editCompanyId, setEditCompanyId] = useState(null);
@@ -44,8 +44,8 @@ const AdminPanel = () => {
   const fetchAdminData = async () => {
     try {
       const [usersRes, compsRes] = await Promise.all([
-        axios.get(`${API_URL}/admin/users`),
-        axios.get(`${API_URL}/companies`)
+        apiClient.get('/admin/users'),
+        apiClient.get('/companies')
       ]);
       setUsers(usersRes.data);
       setCompanies(compsRes.data);
@@ -107,7 +107,7 @@ const AdminPanel = () => {
   const handleDeleteUser = async (userId) => {
     if (window.confirm('Are you sure you want to permanently delete this user account?')) {
       try {
-        await axios.delete(`${API_URL}/admin/users/${userId}`);
+        await apiClient.delete(`/admin/users/${userId}`);
         setUsers(users.filter(u => u._id !== userId));
         setMessage('✅ User account deleted successfully!');
       } catch (err) {
@@ -119,7 +119,7 @@ const AdminPanel = () => {
   const handleDeleteCompany = async (compId) => {
     if (window.confirm('Are you sure you want to permanently delete this company guide?')) {
       try {
-        await axios.delete(`${API_URL}/companies/${compId}`);
+        await apiClient.delete(`/companies/${compId}`);
         setCompanies(companies.filter(c => c._id !== compId));
         setMessage('✅ Company guide deleted successfully!');
         if (editCompanyId === compId) {
@@ -147,24 +147,27 @@ const AdminPanel = () => {
       preparationTips
     };
 
+    setIsSubmitting(true);
     try {
       if (editCompanyId) {
         // Edit mode
-        await axios.put(`${API_URL}/companies/${editCompanyId}`, companyData);
+        await apiClient.put(`/companies/${editCompanyId}`, companyData);
         setMessage('✅ Company guide updated successfully!');
       } else {
         // Create mode
-        await axios.post(`${API_URL}/companies`, companyData);
+        await apiClient.post('/companies', companyData);
         setMessage('✅ Company guide published successfully!');
       }
       
       // Reset form & reload
       handleCancelEdit();
-      const compsRes = await axios.get(`${API_URL}/companies`);
+      const compsRes = await apiClient.get('/companies');
       setCompanies(compsRes.data);
     } catch (err) {
       console.error('Error saving company listing:', err);
       setMessage('❌ Failed to save company. Double check input fields.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -461,9 +464,10 @@ const AdminPanel = () => {
 
             <button 
               type="submit"
-              className="w-full rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-3 border border-emerald-500/20 shadow-md transition-colors"
+              disabled={isSubmitting}
+              className="w-full rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-3 border border-emerald-500/20 shadow-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {editCompanyId ? 'Update Company Guide' : 'Publish Company Guide'}
+              {isSubmitting ? 'Saving...' : editCompanyId ? 'Update Company Guide' : 'Publish Company Guide'}
             </button>
           </form>
         </div>

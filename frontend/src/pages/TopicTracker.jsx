@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import { API_URL } from '../context/AuthContext';
+import apiClient from '../utils/apiClient';
 import { 
   ChevronDown, 
   ChevronUp, 
@@ -18,6 +17,7 @@ const TopicTracker = () => {
   const [expandedTopic, setExpandedTopic] = useState(null);
   const [problems, setProblems] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // New problem form state
   const [showAddForm, setShowAddForm] = useState(false);
@@ -29,7 +29,7 @@ const TopicTracker = () => {
 
   const fetchTopics = async () => {
     try {
-      const res = await axios.get(`${API_URL}/topics`);
+      const res = await apiClient.get('/topics');
       setTopics(res.data);
     } catch (err) {
       console.error('Error fetching topics:', err);
@@ -52,7 +52,7 @@ const TopicTracker = () => {
       setProblems([]);
       setShowAddForm(false);
       try {
-        const res = await axios.get(`${API_URL}/problems?topic=${encodeURIComponent(topicName)}`);
+        const res = await apiClient.get(`/problems?topic=${encodeURIComponent(topicName)}`);
         setProblems(res.data);
       } catch (err) {
         console.error('Error fetching problems under topic:', err);
@@ -62,9 +62,9 @@ const TopicTracker = () => {
 
   const handleStatusChange = async (probId, newStatus) => {
     try {
-      await axios.put(`${API_URL}/problems/${probId}`, { status: newStatus });
+      await apiClient.put(`/problems/${probId}`, { status: newStatus });
       // Re-fetch problems under topic
-      const res = await axios.get(`${API_URL}/problems?topic=${encodeURIComponent(expandedTopic)}`);
+      const res = await apiClient.get(`/problems?topic=${encodeURIComponent(expandedTopic)}`);
       setProblems(res.data);
       // Re-fetch topics stats
       fetchTopics();
@@ -76,7 +76,7 @@ const TopicTracker = () => {
   const handleDeleteProblem = async (probId) => {
     if (window.confirm('Are you sure you want to delete this problem?')) {
       try {
-        await axios.delete(`${API_URL}/problems/${probId}`);
+        await apiClient.delete(`/problems/${probId}`);
         setProblems(problems.filter(p => p._id !== probId));
         fetchTopics();
       } catch (err) {
@@ -87,8 +87,9 @@ const TopicTracker = () => {
 
   const handleAddProblem = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
     try {
-      await axios.post(`${API_URL}/problems`, {
+      await apiClient.post('/problems', {
         title: newTitle,
         difficulty: newDifficulty,
         topic: expandedTopic,
@@ -105,11 +106,13 @@ const TopicTracker = () => {
       setShowAddForm(false);
 
       // Re-fetch datasets
-      const res = await axios.get(`${API_URL}/problems?topic=${encodeURIComponent(expandedTopic)}`);
+      const res = await apiClient.get(`/problems?topic=${encodeURIComponent(expandedTopic)}`);
       setProblems(res.data);
       fetchTopics();
     } catch (err) {
       console.error('Error adding problem inline:', err);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -226,9 +229,10 @@ const TopicTracker = () => {
                 </div>
                 <button 
                   type="submit" 
-                  className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-1.5 rounded-lg text-xs"
+                  disabled={isSubmitting}
+                  className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold py-1.5 rounded-lg text-xs disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Confirm Add
+                  {isSubmitting ? 'Adding...' : 'Confirm Add'}
                 </button>
               </form>
             )}
